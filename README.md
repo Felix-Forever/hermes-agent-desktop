@@ -5,11 +5,12 @@
 <h1 align="center">Hermes Agent Desktop</h1>
 
 <p align="center">
-  <strong>Multi-Agent Collaboration Desktop Client for Hermes Agent</strong>
+  <strong>The Desktop Client That Turns Hermes Agent Into a Full AI Team</strong>
 </p>
 
 <p align="center">
   <a href="#features">Features</a> &bull;
+  <a href="#whats-new">What's New</a> &bull;
   <a href="#screenshots">Screenshots</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
   <a href="#configuration">Configuration</a> &bull;
@@ -26,9 +27,38 @@
 
 ---
 
-A beautiful, native desktop client for [Hermes Agent](https://github.com/NousResearch/hermes-agent) with **multi-agent collaboration**, **20 built-in AI specialists**, and a **project manager orchestrator** that automatically decomposes tasks and delegates to the right experts.
+> **Not just a GUI wrapper** — this is a ground-up rebuild of the Hermes Agent experience. We added a **complete visual multi-agent collaboration system** and an **integrated Skill Store** that the original CLI version doesn't have.
 
-Built with a clean Apple-inspired design, it works with any OpenAI-compatible LLM provider including Alibaba DashScope (Qwen, Kimi K2.5), DeepSeek, OpenAI, Anthropic, and OpenRouter.
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research is already the most capable open-source AI agent. This desktop client takes it further — replacing the single-agent terminal with a **20-person AI team** led by a Project Manager who automatically understands your requirements, decomposes complex tasks, delegates to the right specialists, and delivers integrated results. No prompt engineering required.
+
+Built with a clean Apple-inspired design, zero Electron bloat, and works with any OpenAI-compatible LLM provider (DashScope, DeepSeek, OpenAI, Anthropic, OpenRouter, and more).
+
+---
+
+## What's New vs Original Hermes Agent
+
+| | Original Hermes (CLI) | Hermes Agent Desktop |
+|---|---|---|
+| **Interface** | Terminal TUI | Native desktop GUI with Apple-style design |
+| **Agent Model** | Single agent, one conversation | **20 specialized AI agents** collaborating in real-time |
+| **Task Handling** | User manually prompts | **PM auto-decomposes tasks**, delegates to experts, synthesizes results |
+| **Skill Discovery** | `hermes skills` CLI command | **Visual Skill Store** with 50+ curated skills, one-click install, search & filter |
+| **Agent Management** | Not available | **Full CRUD dashboard** — create, configure, monitor agents with live status |
+| **Workspace** | `cd` in terminal | **Native folder picker** with recent workspace history |
+| **Model Switching** | Config file edit | **One-click model switcher** in the input area |
+
+### Why Multi-Agent Matters
+
+A single AI agent can write code — but building a real product needs a **team**. This client gives you:
+
+- A **Project Manager** who breaks "build me an e-commerce platform" into 12 actionable sub-tasks
+- A **Product Manager** who writes the PRD before any code is touched
+- A **UI Designer** who defines the interface before the frontend engineer starts
+- **3 Engineers** (frontend, backend, full-stack) who write actual code in their domains
+- A **QA Engineer** who catches what the developers missed
+- An **Architect** who ensures the pieces fit together at scale
+
+All orchestrated automatically. You describe what you want; the team delivers.
 
 ---
 
@@ -49,12 +79,15 @@ Built with a clean Apple-inspired design, it works with any OpenAI-compatible LL
 - **Tool Call Indicators** — Collapsible panels showing agent tool usage, auto-collapsed after completion
 - **Session Management** — Multiple conversations with history, auto-save to localStorage
 
-### Skill Store
+### Integrated Skill Store (New)
 
-- **50+ Curated Skills** — From CocoLoop Skill Hub, covering search, automation, development, productivity, and more
-- **One-Click Install** — Install skills with toast notification feedback
-- **Search & Filter** — Quick search across all available skills
-- **Skill Store Link** — Direct access to the full skill marketplace
+The original Hermes Agent requires CLI commands to discover and install skills. We built a **visual Skill Store** directly into the desktop client:
+
+- **50+ Curated Skills** — Handpicked from [CocoLoop Skill Hub](https://hub.cocoloop.cn/), covering AI search, browser automation, code execution, data processing, content creation, and more
+- **One-Click Install** — Click "+" to install any skill instantly, with loading animation and toast confirmation
+- **Smart Search** — Real-time fuzzy search across all skill names and descriptions
+- **Category Tags** — Skills organized by type (Search, Agent, Development, Productivity, Security, etc.)
+- **Direct Store Access** — Link to the full CocoLoop marketplace for browsing hundreds more
 
 ### Desktop Experience
 

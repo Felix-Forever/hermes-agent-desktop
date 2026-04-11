@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes Agent</title>
+<style>
+/* ============================================================
+   Design System — Grey Palette, AgentHub-inspired Layout
+   ============================================================ */
+:root {
+  --bg-page: #f3f4f8;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-active: #4f6ef7;
+  --bg-active-light: #eef1fe;
+  --bg-hover: #f5f6fa;
+  --bg-code: #1d1d1f;
+  --bg-user-msg: #4f6ef7;
+  --bg-assistant-msg: #f5f6fa;
+  --bg-tag: #eef1fe;
+
+  --text-primary: #1a1d26;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #ffffff;
+  --text-accent: #4f6ef7;
+  --text-code: #e5e5e7;
+
+  --border-color: #e5e7eb;
+  --border-light: #f0f1f3;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-input: 0 2px 8px rgba(0,0,0,0.04);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 24px;
+
+  --sidebar-width: 260px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ============================================================
+   Sidebar — AgentHub Style
+   ============================================================ */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px 28px;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--bg-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* Navigation */
+.sidebar-nav {
+  padding: 0 12px;
+  -webkit-app-region: no-drag;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.nav-item.active {
+  background: var(--bg-active);
+  color: var(--text-inverse);
+}
+
+.nav-item.active .nav-icon { color: var(--text-inverse); }
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.nav-label { flex: 1; }
+
+/* Session list */
+.sidebar-section-title {
+  padding: 20px 20px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  -webkit-app-region: no-drag;
+}
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px;
+  -webkit-app-region: no-drag;
+}
+
+.session-list::-webkit-scrollbar { width: 3px; }
+.session-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+}
+
+.session-item:hover { background: var(--bg-hover); }
+.session-item.active { background: var(--bg-active-light); }
+
+.session-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+}
+
+.session-item.active .session-dot { background: var(--bg-active); }
+
+.session-info { flex: 1; min-width: 0; }
+
+.session-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-footer-badge {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+
+.sidebar-footer-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.sidebar-footer-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ============================================================
+   Main Area
+   ============================================================ */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-page);
+  min-width: 0;
+}
+
+/* Page header — dashboard style */
+.page-header {
+  padding: 28px 32px 0;
+  -webkit-app-region: drag;
+}
+
+.page-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.new-chat-btn {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg-active);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+
+.new-chat-btn:hover { background: #3d5de6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,110,247,0.3); }
+
+/* Stats cards */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 32px 0;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition);
+}
+
+.stat-card:hover { box-shadow: var(--shadow-card-hover); }
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.stat-change {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.stat-change.positive { color: #10b981; }
+.stat-change.negative { color: #ef4444; }
+
+/* ============================================================
+   Chat Area (Card-based)
+   ============================================================ */
+.chat-card {
+  flex: 1;
+  margin: 20px 32px 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chat-card-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.chat-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chat-card-badge {
+  margin-left: auto;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-tag);
+  color: var(--text-accent);
+  font-weight: 600;
+}
+
+/* Messages */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 0;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.messages-container::-webkit-scrollbar { width: 4px; }
+.messages-container::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+/* Welcome */
+.welcome-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  position: absolute;
+  inset: 0;
+}
+
+.welcome-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--bg-active);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: white;
+  font-weight: 700;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(79,110,247,0.25);
+}
+
+.welcome-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.welcome-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 360px;
+  line-height: 1.5;
+}
+
+/* Message rows */
+.message-row {
+  max-width: 768px;
+  margin: 0 auto 20px;
+  padding: 0 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* User message — right-aligned bubble */
+.message-row.user {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.message-row.user .message-bubble {
+  max-width: 70%;
+  padding: 10px 16px;
+  background: var(--bg-user-msg);
+  color: var(--text-inverse);
+  border-radius: var(--radius-lg);
+  border-bottom-right-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.message-row.user .message-avatar {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-inverse);
+  background: var(--bg-active);
+  order: 2;
+  margin-top: 2px;
+}
+
+/* Assistant message — full-width card style */
+.message-row.assistant {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.message-row.assistant .message-avatar {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-inverse);
+  background: linear-gradient(135deg, #6366f1, #4f6ef7);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.message-row.assistant .message-bubble {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ============================================================
+   Markdown Typography (assistant messages)
+   ============================================================ */
+.message-row.assistant .message-bubble p {
+  margin: 0 0 12px;
+}
+.message-row.assistant .message-bubble p:last-child { margin-bottom: 0; }
+
+.message-row.assistant .message-bubble h1,
+.message-row.assistant .message-bubble h2,
+.message-row.assistant .message-bubble h3 {
+  margin: 20px 0 10px;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+.message-row.assistant .message-bubble h1:first-child,
+.message-row.assistant .message-bubble h2:first-child,
+.message-row.assistant .message-bubble h3:first-child { margin-top: 0; }
+
+.message-row.assistant .message-bubble h1 { font-size: 20px; font-weight: 700; }
+.message-row.assistant .message-bubble h2 { font-size: 17px; font-weight: 700; }
+.message-row.assistant .message-bubble h3 { font-size: 15px; font-weight: 600; }
+
+.message-row.assistant .message-bubble strong { font-weight: 600; color: var(--text-primary); }
+.message-row.assistant .message-bubble em { font-style: italic; }
+
+.message-row.assistant .message-bubble a {
+  color: var(--text-accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(79,110,247,0.3);
+  transition: border-color var(--transition);
+}
+.message-row.assistant .message-bubble a:hover { border-color: var(--text-accent); }
+
+/* Lists */
+.message-row.assistant .message-bubble ul,
+.message-row.assistant .message-bubble ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.message-row.assistant .message-bubble li {
+  margin: 6px 0;
+  padding-left: 4px;
+}
+
+.message-row.assistant .message-bubble li::marker {
+  color: var(--text-tertiary);
+}
+
+/* Blockquote */
+.message-row.assistant .message-bubble blockquote {
+  border-left: 3px solid var(--bg-active);
+  padding: 8px 16px;
+  margin: 12px 0;
+  background: var(--bg-active-light);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+.message-row.assistant .message-bubble blockquote p { margin: 0; }
+
+/* Horizontal rule */
+.message-row.assistant .message-bubble hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 16px 0;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.table-wrap::-webkit-scrollbar { height: 4px; }
+.table-wrap::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+.message-row.assistant .message-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 400px;
+}
+
+.message-row.assistant .message-bubble th,
+.message-row.assistant .message-bubble td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.message-row.assistant .message-bubble th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 12px;
+  background: var(--bg-hover);
+  white-space: nowrap;
+}
+
+.message-row.assistant .message-bubble td {
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.message-row.assistant .message-bubble tbody tr:last-child td { border-bottom: none; }
+.message-row.assistant .message-bubble tr:hover td { background: rgba(79,110,247,0.03); }
+
+/* Inline code */
+.message-row.assistant .message-bubble code:not(.code-block code) {
+  background: rgba(79,110,247,0.08);
+  color: #4338ca;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.message-row.user .message-bubble code { background: rgba(255,255,255,0.2); }
+
+/* ============================================================
+   Code blocks
+   ============================================================ */
+.code-block {
+  background: #1e1e2e;
+  border-radius: var(--radius-md);
+  margin: 14px 0;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 11px;
+  color: #a1a1aa;
+  font-family: var(--font-mono);
+}
+
+.code-copy-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #a1a1aa;
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: all var(--transition);
+}
+.code-copy-btn:hover { background: rgba(255,255,255,0.12); color: #e4e4e7; }
+
+.code-block pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+.code-block pre::-webkit-scrollbar { height: 4px; }
+.code-block pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: #e4e4e7;
+  line-height: 1.6;
+  tab-size: 4;
+}
+
+/* Tool call indicators */
+.tool-calls-group {
+  margin: 10px 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.tool-calls-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: var(--bg-hover);
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: background var(--transition);
+}
+
+.tool-calls-toggle:hover { background: #ebedf2; }
+
+.tool-calls-toggle .tool-chevron {
+  font-size: 10px;
+  transition: transform var(--transition);
+  color: var(--text-tertiary);
+}
+
+.tool-calls-group.expanded .tool-chevron { transform: rotate(90deg); }
+
+.tool-calls-toggle .tool-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.tool-calls-list {
+  display: none;
+  padding: 6px 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.tool-calls-group.expanded .tool-calls-list { display: block; }
+
+.tool-call-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.tool-call-item .tool-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
+}
+
+/* Tool calls during streaming — show expanded */
+.tool-calls-group.streaming .tool-calls-list { display: block; }
+.tool-calls-group.streaming .tool-chevron { transform: rotate(90deg); }
+
+/* Streaming cursor */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 17px;
+  background: var(--bg-active);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ============================================================
+   Input Area
+   ============================================================ */
+.input-area {
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--border-light);
+}
+
+.input-box {
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 4px 4px 4px 16px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-box:focus-within {
+  border-color: var(--bg-active);
+  box-shadow: 0 0 0 3px rgba(79,110,247,0.12);
+}
+
+.input-box textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: transparent;
+  padding: 8px 0;
+  min-height: 42px;
+  max-height: 150px;
+  line-height: 1.5;
+}
+.input-box textarea::placeholder { color: var(--text-tertiary); }
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-active);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.send-btn:hover { background: #3d5de6; }
+.send-btn:disabled { background: #d1d5db; cursor: default; }
+.send-btn svg { width: 16px; height: 16px; }
+.stop-btn { background: #ef4444; }
+.stop-btn:hover { background: #dc2626; }
+
+.input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.input-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.input-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.workspace-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.workspace-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
+.workspace-btn svg { flex-shrink: 0; }
+
+.workspace-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 180px;
+  z-index: 50;
+  padding: 4px;
+  animation: fadeIn 0.15s ease;
+}
+.workspace-dropdown.visible { display: block; }
+
+.workspace-dropdown-item {
+  padding: 7px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  transition: background var(--transition);
+}
+.workspace-dropdown-item:hover { background: var(--bg-hover); }
+.workspace-dropdown-item.active { background: var(--bg-active-light); color: var(--text-accent); font-weight: 600; }
+
+.model-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.model-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.model-selector-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.model-selector-btn .model-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.model-selector-btn svg { width: 10px; height: 10px; color: var(--text-tertiary); }
+
+.model-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 200px;
+  z-index: 50;
+  padding: 4px;
+  animation: fadeIn 0.15s ease;
+}
+
+.model-dropdown.visible { display: block; }
+
+.model-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: background var(--transition);
+}
+
+.model-dropdown-item:hover { background: var(--bg-hover); }
+
+.model-dropdown-item.active { background: var(--bg-active-light); color: var(--text-accent); font-weight: 600; }
+
+.model-dropdown-item .model-item-check {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-accent);
+  opacity: 0;
+}
+
+.model-dropdown-item.active .model-item-check { opacity: 1; }
+
+/* ============================================================
+   Agents View
+   ============================================================ */
+.agents-view {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  padding: 28px 32px;
+  overflow-y: auto;
+}
+
+.agents-view.visible { display: flex; }
+
+.agents-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.agents-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.agents-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.agents-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.agents-stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  text-align: center;
+}
+
+.agents-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.agents-stat-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.agent-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.agent-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-2px); }
+
+.agent-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.agent-avatar {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.agent-card-info { flex: 1; min-width: 0; }
+
+.agent-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.agent-card-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agent-skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.agent-skill-tag {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bg-page);
+  color: var(--text-secondary);
+  font-weight: 500;
+  border: 1px solid var(--border-light);
+}
+
+.agent-tools-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: 8px;
+}
+
+/* Agent status */
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.agent-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-status-dot.idle { background: #d1d5db; }
+.agent-status-dot.working { background: #10b981; animation: pulse 1.5s ease infinite; }
+.agent-status-dot.waiting { background: #f59e0b; }
+
+.agent-status-text {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.agent-status-text.working { color: #10b981; }
+
+.agent-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 80px;
+}
+
+.agent-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #10b981;
+  transition: width 0.5s ease;
+}
+
+.agent-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.agent-card-model {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-tag);
+  color: var(--text-accent);
+  font-weight: 500;
+}
+
+.agent-card-badge {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   Skills View
+   ============================================================ */
+.skills-view {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  padding: 28px 32px;
+  overflow-y: auto;
+}
+.skills-view.visible { display: flex; }
+
+.skills-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.skills-search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.skills-search-input {
+  flex: 1;
+  padding: 10px 14px 10px 36px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") 12px center no-repeat;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.skills-search-input:focus { border-color: var(--bg-active); }
+
+.skills-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+  white-space: nowrap;
+}
+.skills-store-btn:hover { background: var(--bg-active); color: white; border-color: var(--bg-active); }
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.skill-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all var(--transition);
+}
+.skill-card:hover { box-shadow: var(--shadow-card-hover); }
+
+.skill-card-icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: var(--bg-page);
+}
+
+.skill-card-body { flex: 1; min-width: 0; }
+
+.skill-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skill-card-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.skill-card-tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--bg-tag);
+  color: var(--text-accent);
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.skill-install-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  margin-top: 4px;
+}
+.skill-install-btn:hover { border-color: var(--bg-active); color: var(--bg-active); background: var(--bg-active-light); }
+.skill-install-btn.installed { border-color: #10b981; color: #10b981; background: #ecfdf5; cursor: default; }
+.skill-install-btn.installed:hover { background: #ecfdf5; }
+
+/* Agent badge in chat */
+.agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-tag);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-accent);
+  margin-bottom: 8px;
+}
+
+.agent-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.agent-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+/* Agent section dividers in multi-agent responses */
+.agent-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 10px;
+  padding: 0;
+}
+
+.agent-section-divider:first-child { margin-top: 0; }
+
+.agent-section-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agent-section-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.agent-section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+/* Agent editor textarea */
+.agent-prompt-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+  min-height: 100px;
+}
+.agent-prompt-textarea:focus { border-color: var(--bg-active); }
+
+.new-agent-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg-active);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-sans);
+}
+.new-agent-btn:hover { background: #3d5de6; }
+
+/* ============================================================
+   Status bar
+   ============================================================ */
+.status-bar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.status-bar.visible { display: flex; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+.status-dot.error { background: #ef4444; }
+.status-dot.connecting { background: #f59e0b; animation: pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ============================================================
+   Settings
+   ============================================================ */
+.settings-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  animation: fadeIn 0.15s ease;
+}
+.settings-overlay.visible { display: flex; align-items: center; justify-content: center; }
+
+.settings-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 440px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.settings-panel h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+
+.settings-group { margin-bottom: 18px; }
+.settings-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.settings-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-page);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.settings-group input:focus { border-color: var(--bg-active); }
+
+.settings-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+.btn-secondary {
+  padding: 8px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);
+  background: var(--bg-card); color: var(--text-primary); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background var(--transition); font-family: var(--font-sans);
+}
+.btn-secondary:hover { background: var(--bg-hover); }
+.btn-primary {
+  padding: 8px 18px; border-radius: var(--radius-sm); border: none;
+  background: var(--bg-active); color: white; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background var(--transition); font-family: var(--font-sans);
+}
+.btn-primary:hover { background: #3d5de6; }
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+  pointer-events: auto;
+}
+
+.toast-icon { font-size: 16px; }
+.toast.success { border-left: 3px solid #10b981; }
+.toast.error { border-left: 3px solid #ef4444; }
+.toast.info { border-left: 3px solid var(--bg-active); }
+
+@keyframes toastIn { from { opacity:0; transform: translateX(40px); } to { opacity:1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateY(-10px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Workspace prompt modal */
+.ws-prompt-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  z-index: 150;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.ws-prompt-overlay.visible { display: flex; }
+
+.ws-prompt-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.ws-prompt-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--bg-active-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--bg-active);
+}
+
+.ws-prompt-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.ws-prompt-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.ws-prompt-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.ws-prompt-actions .btn-primary { padding: 10px 24px; }
+.ws-prompt-actions .btn-secondary { padding: 10px 18px; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .page-header, .stats-row, .chat-card { margin-left: 16px; margin-right: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">H</div>
+      <span class="brand-name">Hermes</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item" onclick="newChat()" data-nav="new">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="nav-label">新对话</span>
+      </div>
+      <div class="nav-item" onclick="showView('agents')" data-nav="agents">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+        <span class="nav-label">Agents</span>
+      </div>
+      <div class="nav-item" onclick="showView('skills')" data-nav="skills">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+        <span class="nav-label">技能</span>
+      </div>
+      <div class="nav-item" onclick="toggleSettings()" data-nav="settings">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+        <span class="nav-label">设置</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-section-title">对话记录</div>
+    <div class="session-list" id="sessionList"></div>
+
+    <span id="modelBadge" style="display:none"></span>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Hidden elements for stats JS compatibility -->
+    <span id="pageTitle" style="display:none">对话</span>
+    <span id="statSessions" style="display:none">0</span>
+    <span id="statAgent" style="display:none">在线</span>
+    <span id="statAgentDetail" style="display:none"></span>
+    <span id="statMessages" style="display:none">0</span>
+    <span id="statToday" style="display:none">0</span>
+
+    <!-- Agents View -->
+    <div class="agents-view" id="agentsView">
+      <div class="agents-header">
+        <div>
+          <div class="agents-title">Agents</div>
+          <div class="agents-subtitle">管理你的 AI 智能体，用于专业化任务处理</div>
+        </div>
+        <button class="new-agent-btn" onclick="openAgentEditor()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          新建 Agent
+        </button>
+      </div>
+      <div class="agents-stats-row" id="agentsStatsRow">
+        <div class="agents-stat-card">
+          <div class="agents-stat-value" id="agStatTotal">0</div>
+          <div class="agents-stat-label">Agent 总数</div>
+        </div>
+        <div class="agents-stat-card">
+          <div class="agents-stat-value" id="agStatWorking" style="color:#10b981">0</div>
+          <div class="agents-stat-label">工作中</div>
+        </div>
+        <div class="agents-stat-card">
+          <div class="agents-stat-value" id="agStatProgress">0%</div>
+          <div class="agents-stat-label">任务进度</div>
+        </div>
+        <div class="agents-stat-card">
+          <div class="agents-stat-value" id="agStatDone" style="color:#4f6ef7">0</div>
+          <div class="agents-stat-label">已完成任务</div>
+        </div>
+      </div>
+      <div class="agents-grid" id="agentsGrid"></div>
+    </div>
+
+    <!-- Skills View -->
+    <div class="skills-view" id="skillsView">
+      <div class="skills-header">
+        <div>
+          <div class="agents-title">技能</div>
+          <div class="agents-subtitle">发现和安装 AI 技能扩展</div>
+        </div>
+      </div>
+      <div class="skills-search-row">
+        <input type="text" class="skills-search-input" id="skillsSearch" placeholder="搜索技能..." oninput="filterSkills(this.value)">
+        <button class="skills-store-btn" onclick="window.open('https://skill.cocoloop.com','_blank')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/><path d="M12 3v6"/></svg>
+          Skill 商店
+        </button>
+      </div>
+      <div class="skills-grid" id="skillsGrid"></div>
+    </div>
+
+    <!-- Chat Area (full height) -->
+    <div id="chatView" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+    <div class="chat-card" style="margin:0;border-radius:0;border:none;box-shadow:none;">
+      <div class="chat-card-header">
+        <span class="chat-card-title" id="chatCardTitle">New Chat</span>
+        <span class="chat-card-badge" id="chatCardBadge">进行中</span>
+      </div>
+
+      <div class="messages-container" id="messagesContainer">
+        <div class="welcome-screen" id="welcomeScreen">
+          <div class="welcome-icon">H</div>
+          <div class="welcome-title">Hermes Agent</div>
+          <div class="welcome-subtitle">自我进化的 AI 智能体，由 Nous Research 构建。输入任何问题开始对话。</div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="status-bar" id="statusBar">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Connected</span>
+        </div>
+        <div class="input-box">
+          <textarea id="userInput" rows="2" placeholder="输入消息..."
+                    oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 13l10-5L3 3v4l6 1-6 1v4z" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="input-footer">
+          <div class="input-footer-left">
+            <button class="workspace-btn" onclick="toggleWorkspaceMenu(event)" title="工作空间">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span id="workspaceLabel">~/</span>
+            </button>
+            <span class="input-hint">Enter 发送 · Shift+Enter 换行</span>
+            <div class="workspace-dropdown" id="workspaceDropdown">
+              <div class="workspace-dropdown-item" onclick="openNativeFolderPicker()" style="color:var(--text-accent);font-family:var(--font-sans)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                选择文件夹...
+              </div>
+              <div id="recentWorkspaces"></div>
+            </div>
+          </div>
+          <div class="model-selector">
+            <button class="model-selector-btn" onclick="toggleModelDropdown(event)" id="modelSelectorBtn">
+              <span class="model-dot"></span>
+              <span id="modelSelectorLabel">kimi-k2.5</span>
+              <svg viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="model-dropdown" id="modelDropdown">
+              <div class="model-dropdown-item" onclick="selectModel('kimi-k2.5')">kimi-k2.5<span class="model-item-check">&#10003;</span></div>
+              <div class="model-dropdown-item" onclick="selectModel('qwen-plus')">qwen-plus<span class="model-item-check">&#10003;</span></div>
+              <div class="model-dropdown-item" onclick="selectModel('qwen-max')">qwen-max<span class="model-item-check">&#10003;</span></div>
+              <div class="model-dropdown-item" onclick="selectModel('deepseek-v3')">deepseek-v3<span class="model-item-check">&#10003;</span></div>
+              <div class="model-dropdown-item" onclick="selectModel('deepseek-r1')">deepseek-r1<span class="model-item-check">&#10003;</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /chatView -->
+
+  </main>
+</div>
+
+<!-- Workspace Prompt Modal -->
+<div class="ws-prompt-overlay" id="wsPromptOverlay">
+  <div class="ws-prompt-panel">
+    <div class="ws-prompt-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <div class="ws-prompt-title">选择工作空间</div>
+    <div class="ws-prompt-desc">开始对话前，请先指定一个工作目录。Agent 将在该目录中执行文件操作。</div>
+    <div class="ws-prompt-actions">
+      <button class="btn-secondary" onclick="skipWorkspacePrompt()">稍后选择</button>
+      <button class="btn-primary" onclick="chooseWorkspaceFromPrompt()">选择文件夹</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Settings Overlay -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsOnOverlay(event)">
+  <div class="settings-panel">
+    <h2>设置</h2>
+    <div class="settings-group">
+      <label>API Endpoint</label>
+      <input type="text" id="settingEndpoint" value="http://127.0.0.1:8642" placeholder="http://127.0.0.1:8642">
+    </div>
+    <div class="settings-group">
+      <label>API Key (可选)</label>
+      <input type="password" id="settingApiKey" placeholder="Bearer token">
+    </div>
+    <div class="settings-group">
+      <label>Model</label>
+      <input type="text" id="settingModel" value="hermes-agent" placeholder="hermes-agent">
+    </div>
+    <div class="settings-actions">
+      <button class="btn-secondary" onclick="toggleSettings()">取消</button>
+      <button class="btn-primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Editor Overlay -->
+<div class="settings-overlay" id="agentEditorOverlay" onclick="if(event.target===this)closeAgentEditor()">
+  <div class="settings-panel" style="width:520px">
+    <h2 id="agentEditorTitle">新建 Agent</h2>
+    <div class="settings-group">
+      <label>名称</label>
+      <input type="text" id="agentName" placeholder="例如: 代码专家">
+    </div>
+    <div class="settings-group">
+      <label>描述</label>
+      <input type="text" id="agentDesc" placeholder="简要描述这个 Agent 的能力">
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="settings-group" style="width:80px">
+        <label>图标</label>
+        <input type="text" id="agentIcon" value="🤖" maxlength="4" style="text-align:center">
+      </div>
+      <div class="settings-group" style="width:80px">
+        <label>颜色</label>
+        <input type="color" id="agentColor" value="#4f6ef7" style="height:40px;padding:4px">
+      </div>
+      <div class="settings-group" style="flex:1">
+        <label>模型 (可选覆盖)</label>
+        <input type="text" id="agentModel" placeholder="留空则使用默认模型">
+      </div>
+    </div>
+    <div class="settings-group">
+      <label>System Prompt</label>
+      <textarea id="agentPrompt" class="agent-prompt-textarea" rows="6" placeholder="你是一位专业的..."></textarea>
+    </div>
+    <div class="settings-actions">
+      <button class="btn-secondary" id="agentDeleteBtn" onclick="deleteAgent()" style="margin-right:auto;color:#ef4444;display:none">删除</button>
+      <button class="btn-secondary" onclick="closeAgentEditor()">取消</button>
+      <button class="btn-primary" onclick="saveAgent()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+const state = {
+  sessions: [],
+  currentSessionId: null,
+  messages: {},
+  isStreaming: false,
+  abortController: null,
+  currentView: 'chat',
+  settings: { endpoint: 'http://127.0.0.1:8642', apiKey: '', model: 'hermes-agent' },
+  agents: [],
+  workspace: '~/',
+  _completedTasks: 0,
+};
+
+function loadSettings() {
+  try { const s = localStorage.getItem('hermes-settings'); if (s) Object.assign(state.settings, JSON.parse(s)); } catch(e) {}
+  document.getElementById('settingEndpoint').value = state.settings.endpoint;
+  document.getElementById('settingApiKey').value = state.settings.apiKey;
+  document.getElementById('settingModel').value = state.settings.model;
+}
+
+function saveSettings() {
+  state.settings.endpoint = document.getElementById('settingEndpoint').value.replace(/\/+$/, '');
+  state.settings.apiKey = document.getElementById('settingApiKey').value;
+  state.settings.model = document.getElementById('settingModel').value || 'hermes-agent';
+  localStorage.setItem('hermes-settings', JSON.stringify(state.settings));
+  toggleSettings();
+  checkConnection();
+}
+
+function loadSessions() {
+  try { const s = localStorage.getItem('hermes-sessions'); if (s) { const d = JSON.parse(s); state.sessions = d.sessions || []; state.messages = d.messages || {}; } } catch(e) {}
+}
+
+function saveSessions() {
+  localStorage.setItem('hermes-sessions', JSON.stringify({ sessions: state.sessions, messages: state.messages }));
+}
+
+// ============================================================
+// Views
+// ============================================================
+function showView(view) {
+  state.currentView = view;
+  const labels = { chat: '对话', agents: 'Agents', skills: '技能' };
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const nav = el.getAttribute('data-nav');
+    el.classList.toggle('active', nav === view);
+  });
+  document.getElementById('pageTitle').textContent = labels[view] || view;
+  // Toggle views
+  document.getElementById('chatView').style.display = (view === 'chat') ? 'flex' : 'none';
+  const av = document.getElementById('agentsView');
+  const sv = document.getElementById('skillsView');
+  if (view === 'agents') { av.classList.add('visible'); renderAgents(); } else { av.classList.remove('visible'); }
+  if (view === 'skills') { sv.classList.add('visible'); renderSkills(); } else { sv.classList.remove('visible'); }
+  if (view === 'chat') { renderMessages(); }
+}
+
+// ============================================================
+// Sessions
+// ============================================================
+function newChat() {
+  const id = 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2,6);
+  state.sessions.unshift({ id, title: 'New Chat', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  state.messages[id] = [];
+  state.currentSessionId = id;
+  saveSessions();
+  showView('chat');
+  renderSessions();
+  renderMessages();
+  updateStats();
+  document.getElementById('userInput').focus();
+}
+
+function switchSession(id) {
+  state.currentSessionId = id;
+  showView('chat');
+  renderSessions();
+  renderMessages();
+  updateStats();
+}
+
+function renderSessions() {
+  const list = document.getElementById('sessionList');
+  list.innerHTML = state.sessions.map(s => {
+    const active = s.id === state.currentSessionId ? ' active' : '';
+    const date = new Date(s.updatedAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    const msgCount = (state.messages[s.id] || []).length;
+    return `<div class="session-item${active}" onclick="switchSession('${s.id}')">
+      <span class="session-dot"></span>
+      <div class="session-info">
+        <div class="session-title">${escapeHtml(s.title)}</div>
+        <div class="session-meta">${date} · ${msgCount} 条消息</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const session = state.sessions.find(s => s.id === state.currentSessionId);
+  document.getElementById('chatCardTitle').textContent = session ? session.title : 'New Chat';
+}
+
+// ============================================================
+// Stats
+// ============================================================
+function updateStats() {
+  const totalSessions = state.sessions.length;
+  const currentMsgs = state.currentSessionId ? (state.messages[state.currentSessionId] || []).length : 0;
+  const todaySessions = state.sessions.filter(s => {
+    const d = new Date(s.createdAt);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  }).length;
+
+  document.getElementById('statSessions').textContent = totalSessions;
+  document.getElementById('statMessages').textContent = currentMsgs;
+  document.getElementById('statToday').textContent = todaySessions;
+}
+
+// ============================================================
+// Messages
+// ============================================================
+function renderMessages() {
+  const container = document.getElementById('messagesContainer');
+  const welcome = document.getElementById('welcomeScreen');
+  const msgs = state.messages[state.currentSessionId] || [];
+  if (msgs.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(welcome);
+    welcome.style.display = 'flex';
+    return;
+  }
+  welcome.style.display = 'none';
+  container.innerHTML = msgs.map((msg, i) => renderMessage(msg, i)).join('');
+  scrollToBottom();
+}
+
+function renderMessage(msg, index) {
+  const isUser = msg.role === 'user';
+  const avatar = isUser ? 'U' : 'H';
+  let displayContent = msg.content || '';
+  const content = isUser ? escapeHtml(displayContent) : renderMarkdown(displayContent);
+  // Build multi-agent badge row
+  let agentBadges = '';
+  const ids = msg.agentIds || (msg.agentId ? [msg.agentId] : []);
+  if (!isUser && ids.length > 0) {
+    const badges = ids.map(id => {
+      const a = state.agents.find(x => x.id === id);
+      return a ? `<span class="agent-badge"><span class="agent-badge-dot" style="background:${a.color}"></span>${escapeHtml(a.name)}</span>` : '';
+    }).filter(Boolean).join('');
+    if (badges) agentBadges = `<div class="agent-badges-row">${badges}</div>`;
+  }
+  return `<div class="message-row ${msg.role}">
+    <div class="message-avatar">${avatar}</div>
+    <div class="message-bubble">${agentBadges}${content}</div>
+  </div>`;
+}
+
+function renderMarkdown(text, isStreaming) {
+  if (!text) return '';
+
+  // 0a. Convert agent section markers to visual dividers
+  text = text.replace(/<!--\s*agent:(\S+?)\s*-->\n?/g, (_, id) => {
+    const agent = (typeof state !== 'undefined') ? state.agents.find(a => a.id === id) : null;
+    if (agent) {
+      return `\n\x00AGENTSEC_${escapeHtml(agent.name)}_${agent.color}\x00\n`;
+    }
+    return '';
+  });
+
+  // 0b. Extract tool call markers
+  const toolCalls = [];
+  text = text.replace(/<!--tool:(.+?)-->/g, (_, name) => {
+    toolCalls.push(name.trim());
+    return `\x00TOOL${toolCalls.length - 1}\x00`;
+  });
+  text = text.replace(/\n?`>\s*(.+?)`\n?/g, (_, name) => {
+    toolCalls.push(name.trim());
+    return `\x00TOOL${toolCalls.length - 1}\x00`;
+  });
+
+  // 1. Protect code blocks
+  const codeBlocks = [];
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const id = `\x00CODE${codeBlocks.length}\x00`;
+    codeBlocks.push(`<div class="code-block"><div class="code-block-header"><span>${escapeHtml(lang || 'code')}</span><button class="code-copy-btn" onclick="copyCode(this)">Copy</button></div><pre><code>${escapeHtml(code.trim())}</code></pre></div>`);
+    return id;
+  });
+
+  // 2. Pre-process: extract tables (they may not have \n\n around them)
+  const tables = [];
+  text = text.replace(/(^|\n)((?:\|[^\n]+\|\s*\n)(?:\|[-:\s|]+\|\s*\n)((?:\|[^\n]+\|\s*\n?)*))/gm, (match, prefix, tableBlock) => {
+    const id = `\x00TBL${tables.length}\x00`;
+    tables.push(parseTable(tableBlock.trim()));
+    return prefix + id;
+  });
+
+  // 3. Split into blocks
+  const lines = text.split('\n');
+  let html = '';
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Empty line
+    if (!trimmed) { i++; continue; }
+
+    // Agent section divider
+    if (trimmed.startsWith('\x00AGENTSEC_')) {
+      const parts = trimmed.replace(/\x00/g, '').replace('AGENTSEC_', '').split('_');
+      const color = parts.pop();
+      const agentName = parts.join('_');
+      html += `<div class="agent-section-divider"><span class="agent-section-dot" style="background:${color}"></span><span class="agent-section-name">${agentName}</span><span class="agent-section-line"></span></div>`;
+      i++; continue;
+    }
+
+    // Tool call placeholder — collect consecutive ones
+    if (trimmed.startsWith('\x00TOOL')) {
+      let toolIdxs = [];
+      while (i < lines.length && lines[i].trim().startsWith('\x00TOOL')) {
+        const idx = parseInt(lines[i].trim().replace(/\x00TOOL|\x00/g, ''));
+        toolIdxs.push(idx);
+        i++;
+      }
+      const expandedClass = isStreaming ? ' streaming' : '';
+      const items = toolIdxs.map(idx => `<div class="tool-call-item"><span class="tool-dot"></span>${escapeHtml(toolCalls[idx] || 'tool')}</div>`).join('');
+      html += `<div class="tool-calls-group${expandedClass}"><div class="tool-calls-toggle" onclick="this.parentElement.classList.toggle('expanded')"><span class="tool-chevron">&#9654;</span>工具调用<span class="tool-count">${toolIdxs.length} 项</span></div><div class="tool-calls-list">${items}</div></div>`;
+      continue;
+    }
+
+    // Restored code block
+    if (trimmed.startsWith('\x00CODE')) { html += trimmed; i++; continue; }
+
+    // Restored table
+    if (trimmed.startsWith('\x00TBL')) {
+      const idx = parseInt(trimmed.replace(/\x00TBL|\x00/g, ''));
+      html += tables[idx]; i++; continue;
+    }
+
+    // Headings
+    const hMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+    if (hMatch) { const tag = 'h' + hMatch[1].length; html += `<${tag}>${inlineFormat(hMatch[2])}</${tag}>`; i++; continue; }
+
+    // Horizontal rule
+    if (/^[-*_]{3,}$/.test(trimmed)) { html += '<hr>'; i++; continue; }
+
+    // Blockquote (collect consecutive > lines)
+    if (/^>\s?/.test(trimmed)) {
+      let bq = '';
+      while (i < lines.length && /^>\s?/.test(lines[i].trim())) { bq += lines[i].trim().replace(/^>\s?/, '') + '\n'; i++; }
+      html += `<blockquote><p>${inlineFormat(bq.trim())}</p></blockquote>`;
+      continue;
+    }
+
+    // Unordered list (collect consecutive - / * / + lines)
+    if (/^[-*+]\s/.test(trimmed)) {
+      let items = [];
+      while (i < lines.length && /^\s*[-*+]\s/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*+]\s+/, '').trim());
+        i++;
+      }
+      html += '<ul>' + items.map(it => `<li>${inlineFormat(it)}</li>`).join('') + '</ul>';
+      continue;
+    }
+
+    // Ordered list
+    if (/^\d+[.)]\s/.test(trimmed)) {
+      let items = [];
+      while (i < lines.length && /^\s*\d+[.)]\s/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+[.)]\s+/, '').trim());
+        i++;
+      }
+      html += '<ol>' + items.map(it => `<li>${inlineFormat(it)}</li>`).join('') + '</ol>';
+      continue;
+    }
+
+    // Paragraph — collect lines until blank or block-level element
+    let para = '';
+    while (i < lines.length) {
+      const l = lines[i].trim();
+      if (!l || /^#{1,3}\s/.test(l) || /^[-*_]{3,}$/.test(l) || /^>\s?/.test(l)
+          || /^[-*+]\s/.test(l) || /^\d+[.)]\s/.test(l) || l.startsWith('\x00')) break;
+      para += (para ? ' ' : '') + l;
+      i++;
+    }
+    if (para) html += `<p>${inlineFormat(para)}</p>`;
+  }
+
+  // 4. Restore code blocks
+  codeBlocks.forEach((block, idx) => { html = html.replace(`\x00CODE${idx}\x00`, block); });
+
+  return html;
+}
+
+function parseTable(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return `<p>${inlineFormat(text)}</p>`;
+
+  const parseRow = row => row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+
+  const headers = parseRow(lines[0]);
+  // lines[1] is the separator
+  const bodyRows = lines.slice(2).map(parseRow);
+
+  let t = '<div class="table-wrap"><table><thead><tr>';
+  t += headers.map(h => `<th>${inlineFormat(h)}</th>`).join('');
+  t += '</tr></thead><tbody>';
+  bodyRows.forEach(row => {
+    t += '<tr>' + row.map(c => `<td>${inlineFormat(c)}</td>`).join('') + '</tr>';
+  });
+  t += '</tbody></table></div>';
+  return t;
+}
+
+function inlineFormat(text) {
+  // Inline code
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Strikethrough
+  text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+  // Links
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Line breaks within a block
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); });
+}
+function scrollToBottom() {
+  const c = document.getElementById('messagesContainer');
+  requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; });
+}
+
+// ============================================================
+// Input
+// ============================================================
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function handleKeyDown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+// ============================================================
+// API
+// ============================================================
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || state.isStreaming) return;
+
+  // Check workspace — prompt user to select if not set
+  if (!state.workspace || state.workspace === '~/') {
+    showWorkspacePrompt();
+    return;
+  }
+
+  if (!state.currentSessionId) newChat();
+
+  const sessionId = state.currentSessionId;
+  const msgs = state.messages[sessionId];
+  msgs.push({ role: 'user', content: text });
+  input.value = ''; input.style.height = 'auto';
+
+  if (msgs.length === 1) {
+    const s = state.sessions.find(s => s.id === sessionId);
+    if (s) { s.title = text.slice(0, 40) + (text.length > 40 ? '...' : ''); s.updatedAt = new Date().toISOString(); }
+  }
+  saveSessions(); renderSessions(); updateStats();
+
+  document.getElementById('welcomeScreen').style.display = 'none';
+  const container = document.getElementById('messagesContainer');
+  container.innerHTML += renderMessage(msgs[msgs.length - 1], msgs.length - 1);
+
+  msgs.push({ role: 'assistant', content: '' });
+  const ai = msgs.length - 1;
+  container.innerHTML += `<div class="message-row assistant" id="msg-${ai}"><div class="message-avatar">H</div><div class="message-bubble"><span class="streaming-cursor"></span></div></div>`;
+  scrollToBottom();
+
+  state.isStreaming = true; updateSendButton(); showStatus('connecting', '连接中...');
+  const ac = new AbortController(); state.abortController = ac;
+
+  try {
+    const apiMsgs = [];
+    const orchPrompt = buildOrchestratorPrompt();
+    if (orchPrompt) apiMsgs.push({ role: 'system', content: orchPrompt });
+    apiMsgs.push(...msgs.slice(0, -1).map(m => ({ role: m.role, content: m.content })));
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.settings.apiKey) headers['Authorization'] = `Bearer ${state.settings.apiKey}`;
+    headers['X-Hermes-Session-Id'] = sessionId;
+
+    const resp = await fetch(`${state.settings.endpoint}/v1/chat/completions`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ model: state.settings.model, messages: apiMsgs, stream: true }),
+      signal: ac.signal,
+    });
+    if (!resp.ok) throw new Error(`API error ${resp.status}: ${await resp.text()}`);
+    showStatus('connected', '正在回复...');
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let full = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const chunk = JSON.parse(data);
+          const delta = chunk.choices?.[0]?.delta;
+          if (delta?.content) {
+            full += delta.content;
+            updateAssistantMsg(ai, full);
+            // Show active agent in status bar
+            const latestTag = full.match(/<!--\s*agent:(\S+?)\s*-->/g);
+            if (latestTag) {
+              const lastId = latestTag[latestTag.length-1].match(/agent:(\S+)/)[1];
+              const ag = state.agents.find(x => x.id === lastId);
+              if (ag) showStatus('connected', `${ag.name} 正在工作...`);
+            }
+          }
+        } catch(e) {}
+      }
+    }
+    // Parse all agent routing tags — collect unique agents involved
+    const agentTags = [...full.matchAll(/<!--\s*agent:(\S+?)\s*-->/g)].map(m => m[1]);
+    const uniqueAgents = [...new Set(agentTags)];
+    if (uniqueAgents.length > 0) {
+      msgs[ai].agentIds = uniqueAgents;
+      msgs[ai].agentId = uniqueAgents[0]; // primary agent for backward compat
+    }
+    // Keep tags in content for rendering (renderMarkdown will convert them to badges)
+    msgs[ai].content = full; saveSessions(); updateStats();
+    resetAllAgentStatuses();
+    state._completedTasks += Math.max(1, uniqueAgents.length);
+  } catch (err) {
+    if (err.name === 'AbortError') { msgs[ai].content = msgs[ai].content || '(已停止)'; }
+    else { msgs[ai].content = `错误: ${err.message}`; showStatus('error', err.message); }
+    saveSessions();
+  }
+
+  state.isStreaming = false; state.abortController = null; updateSendButton(); hideStatus();
+  const el = document.getElementById(`msg-${ai}`);
+  if (el) el.querySelector('.message-bubble').innerHTML = renderMarkdown(msgs[ai].content, false);
+  scrollToBottom();
+}
+
+function updateAssistantMsg(i, content) {
+  const el = document.getElementById(`msg-${i}`);
+  if (el) { el.querySelector('.message-bubble').innerHTML = renderMarkdown(content, true) + '<span class="streaming-cursor"></span>'; scrollToBottom(); }
+  // Track which agents are active during streaming
+  const tags = [...content.matchAll(/<!--\s*agent:(\S+?)\s*-->/g)].map(m => m[1]);
+  if (tags.length > 0) {
+    resetAllAgentStatuses();
+    const lastAgent = tags[tags.length - 1];
+    setAgentWorking(lastAgent, Math.min(90, Math.round((content.length / 500) * 10)));
+    // Mark PM as working too
+    const pm = state.agents.find(a => a.isMain);
+    if (pm && pm.id !== lastAgent) setAgentWorking(pm.id, Math.min(95, tags.length * 20));
+  }
+}
+
+function stopStreaming() { if (state.abortController) state.abortController.abort(); }
+function updateSendButton() {
+  const btn = document.getElementById('sendBtn');
+  if (state.isStreaming) {
+    btn.className = 'send-btn stop-btn'; btn.onclick = stopStreaming;
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><rect x="4" y="4" width="8" height="8" rx="1" fill="currentColor"/></svg>';
+  } else {
+    btn.className = 'send-btn'; btn.onclick = sendMessage;
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M3 13l10-5L3 3v4l6 1-6 1v4z" fill="currentColor"/></svg>';
+  }
+}
+
+// ============================================================
+// Status & Connection
+// ============================================================
+function showStatus(type, text) {
+  const bar = document.getElementById('statusBar'); bar.classList.add('visible');
+  document.getElementById('statusDot').className = 'status-dot' + (type==='error'?' error':type==='connecting'?' connecting':'');
+  document.getElementById('statusText').textContent = text;
+}
+function hideStatus() { setTimeout(() => document.getElementById('statusBar').classList.remove('visible'), 1500); }
+
+async function checkConnection() {
+  try {
+    const h = {}; if (state.settings.apiKey) h['Authorization'] = `Bearer ${state.settings.apiKey}`;
+    const r = await fetch(`${state.settings.endpoint}/health`, { headers: h, signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      document.getElementById('statAgent').textContent = '在线';
+      document.getElementById('statAgentDetail').textContent = state.settings.model;
+      document.getElementById('statAgentDetail').className = 'stat-change positive';
+      try {
+        const mr = await fetch(`${state.settings.endpoint}/v1/models`, { headers: h });
+        if (mr.ok) { const d = await mr.json(); const id = d.data?.[0]?.id; if (id) document.getElementById('modelBadge').textContent = typeof id === 'object' ? id.default || 'hermes' : id; }
+      } catch(e) {}
+      showStatus('connected', '已连接'); hideStatus();
+    }
+  } catch(e) {
+    document.getElementById('statAgent').textContent = '离线';
+    document.getElementById('statAgentDetail').textContent = '未连接';
+    document.getElementById('statAgentDetail').className = 'stat-change negative';
+    showStatus('error', '未连接'); hideStatus();
+  }
+}
+
+function toggleSettings() { document.getElementById('settingsOverlay').classList.toggle('visible'); }
+
+// Model selector
+function toggleModelDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('modelDropdown');
+  dd.classList.toggle('visible');
+  updateModelDropdownActive();
+  // Close on outside click
+  if (dd.classList.contains('visible')) {
+    setTimeout(() => document.addEventListener('click', closeModelDropdown, { once: true }), 0);
+  }
+}
+
+function closeModelDropdown() { document.getElementById('modelDropdown').classList.remove('visible'); }
+
+function updateModelDropdownActive() {
+  const current = state.settings.model;
+  document.querySelectorAll('.model-dropdown-item').forEach(el => {
+    const name = el.textContent.replace('✓','').trim();
+    el.classList.toggle('active', name === current);
+  });
+}
+
+// Workspace selector
+function toggleWorkspaceMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('workspaceDropdown');
+  dd.classList.toggle('visible');
+  renderRecentWorkspaces();
+  if (dd.classList.contains('visible')) {
+    setTimeout(() => document.addEventListener('click', () => dd.classList.remove('visible'), { once: true }), 0);
+  }
+}
+
+function renderRecentWorkspaces() {
+  const recents = JSON.parse(localStorage.getItem('hermes-workspaces') || '[]');
+  const container = document.getElementById('recentWorkspaces');
+  if (recents.length === 0) {
+    container.innerHTML = '<div style="padding:6px 12px;font-size:11px;color:var(--text-tertiary)">暂无最近使用的工作空间</div>';
+    return;
+  }
+  container.innerHTML = recents.map(p => {
+    const short = p.replace(/^\/Users\/[^/]+/, '~');
+    const isActive = p === state.workspace;
+    return `<div class="workspace-dropdown-item${isActive ? ' active' : ''}" onclick="selectWorkspace('${p.replace(/'/g, "\\'")}')">${escapeHtml(short)}</div>`;
+  }).join('');
+}
+
+async function openNativeFolderPicker() {
+  document.getElementById('workspaceDropdown').classList.remove('visible');
+  try {
+    const resp = await fetch(`${state.settings.endpoint}/api/choose-folder`, { method: 'POST' });
+    const data = await resp.json();
+    if (data.folder) {
+      selectWorkspace(data.folder);
+      showToast('success', `工作空间已切换到 ${data.folder.replace(/^\/Users\/[^/]+/, '~')}`);
+    }
+  } catch(e) {
+    showToast('error', '无法打开文件夹选择器');
+  }
+}
+
+function showWorkspacePrompt() {
+  document.getElementById('wsPromptOverlay').classList.add('visible');
+}
+
+function skipWorkspacePrompt() {
+  document.getElementById('wsPromptOverlay').classList.remove('visible');
+  state.workspace = '__skipped__';
+  // Continue sending message
+  sendMessage();
+}
+
+async function chooseWorkspaceFromPrompt() {
+  document.getElementById('wsPromptOverlay').classList.remove('visible');
+  try {
+    const resp = await fetch(`${state.settings.endpoint}/api/choose-folder`, { method: 'POST' });
+    const data = await resp.json();
+    if (data.folder) {
+      selectWorkspace(data.folder);
+      showToast('success', `工作空间: ${data.folder.replace(/^\/Users\/[^/]+/, '~')}`);
+      // Continue sending message
+      sendMessage();
+    }
+  } catch(e) {
+    showToast('error', '无法打开文件夹选择器');
+  }
+}
+
+function selectWorkspace(path) {
+  state.workspace = path;
+  const short = path.replace(/^\/Users\/[^/]+/, '~');
+  document.getElementById('workspaceLabel').textContent = short;
+  document.getElementById('workspaceDropdown').classList.remove('visible');
+  // Save to recent workspaces
+  let recents = JSON.parse(localStorage.getItem('hermes-workspaces') || '[]');
+  recents = recents.filter(p => p !== path);
+  recents.unshift(path);
+  recents = recents.slice(0, 5);
+  localStorage.setItem('hermes-workspaces', JSON.stringify(recents));
+}
+
+function selectModel(name) {
+  state.settings.model = name;
+  localStorage.setItem('hermes-settings', JSON.stringify(state.settings));
+  document.getElementById('modelSelectorLabel').textContent = name;
+  document.getElementById('modelBadge').textContent = name;
+  document.getElementById('modelDropdown').classList.remove('visible');
+  // Clear agent kwargs cache so next request uses new model
+  fetch(`${state.settings.endpoint}/health`).catch(()=>{});
+}
+function closeSettingsOnOverlay(e) { if (e.target === e.currentTarget) toggleSettings(); }
+
+// ============================================================
+// Init
+// ============================================================
+// ============================================================
+// Agents — Data
+// ============================================================
+function loadAgents() {
+  try { const r = localStorage.getItem('hermes-agents'); if (r) state.agents = JSON.parse(r); } catch(e) {}
+  if (state.agents.length === 0) seedDefaultAgents();
+}
+function saveAgents() { localStorage.setItem('hermes-agents', JSON.stringify(state.agents)); }
+function seedDefaultAgents() {
+  const defaults = [
+    { name: '项目经理', abbr: 'PM', description: '主 Agent：接收需求、分解任务、调度团队、跟进进度、合并成果、解决冲突', skills: ['任务分解','进度管理','资源调度','风险控制'], tools: 8, icon: '👔', color: '#1d4ed8', systemPrompt: '你是一位资深项目经理（PM），也是团队的主调度者。你的职责：\n1. 接收用户需求，深入理解意图\n2. 将需求拆解为清晰的子任务，分配给合适的团队成员\n3. 制定执行计划和优先级\n4. 跟踪进度，协调依赖关系\n5. 合并各方成果为完整交付物\n6. 识别和解决团队冲突\n7. 向用户汇报进展和最终成果\n\n你的输出应包含：任务分解表、分配方案、时间节点和风险提示。用结构化的方式组织信息。', isMain: true },
+    { name: '产品经理', abbr: '产品', description: '需求分析、PRD 撰写、用户故事、竞品分析、产品路线图', skills: ['需求分析','PRD撰写','竞品分析','用户研究'], tools: 6, icon: '📋', color: '#7c3aed', systemPrompt: '你是一位资深产品经理，擅长需求分析、用户研究、PRD撰写、竞品分析和产品路线图规划。你能将模糊的想法转化为清晰的产品方案，关注用户体验和商业价值的平衡。' },
+    { name: 'UI 设计师', abbr: 'UI', description: '界面设计、交互设计、设计系统、视觉规范', skills: ['界面设计','交互设计','设计系统','原型'], tools: 5, icon: '🎨', color: '#ec4899', systemPrompt: '你是一位资深UI/UX设计师，擅长界面设计、交互设计、设计系统构建和视觉规范制定。你关注用户体验、可用性和美学，能输出设计方案、组件规范和交互说明。' },
+    { name: '前端工程师', abbr: '前端', description: 'React/Vue/HTML/CSS/JS，构建用户界面和交互', skills: ['React','Vue','TypeScript','CSS'], tools: 7, icon: '🖥️', color: '#06b6d4', systemPrompt: '你是一位资深前端工程师，精通React、Vue、HTML5、CSS3、JavaScript/TypeScript。你擅长构建响应式界面、组件化开发、性能优化和前端工程化。代码质量高，遵循最佳实践。' },
+    { name: '后端工程师', abbr: '后端', description: 'Python/Java/Go/Node.js，API 设计、数据库、微服务', skills: ['Python','Java','API设计','微服务'], tools: 8, icon: '⚙️', color: '#4f6ef7', systemPrompt: '你是一位资深后端工程师，精通Python、Java、Go、Node.js等语言。擅长API设计、数据库建模、微服务架构、缓存策略和系统性能优化。代码健壮、安全、可维护。' },
+    { name: '全栈工程师', abbr: '全栈', description: '前后端通吃，快速原型开发，技术方案选型', skills: ['全栈开发','快速原型','技术选型','集成'], tools: 10, icon: '🔧', color: '#0891b2', systemPrompt: '你是一位全栈工程师，前后端技术栈均精通。擅长快速原型开发、技术选型、系统集成和端到端交付。能独立完成从数据库到UI的完整功能开发。' },
+    { name: '测试工程师', abbr: 'QA', description: '测试策略、用例设计、自动化测试、Bug 分析', skills: ['自动化测试','用例设计','Bug分析','性能测试'], tools: 6, icon: '🧪', color: '#dc2626', systemPrompt: '你是一位资深测试工程师（QA），擅长测试策略制定、测试用例设计、自动化测试框架搭建和Bug根因分析。你关注质量保障，能从用户视角发现问题，输出测试报告和改进建议。' },
+    { name: '架构师', abbr: '架构', description: '系统架构设计、技术选型、性能规划、高可用方案', skills: ['架构设计','技术选型','性能规划','高可用'], tools: 5, icon: '🏗️', color: '#475569', systemPrompt: '你是一位资深系统架构师，擅长大规模系统架构设计、技术选型评估、性能容量规划、高可用和容灾方案。能绘制架构图、评估技术方案利弊、制定技术演进路线。' },
+    { name: 'DevOps 工程师', abbr: 'Ops', description: 'CI/CD、容器化、云部署、监控告警', skills: ['CI/CD','Docker/K8s','云部署','监控'], tools: 9, icon: '🚀', color: '#ea580c', systemPrompt: '你是一位DevOps工程师，精通CI/CD流水线、Docker/K8s容器化、云平台（AWS/阿里云/腾讯云）部署、监控告警和自动化运维。能编写Dockerfile、K8s配置、GitHub Actions等。' },
+    { name: '数据工程师', abbr: '数据', description: '数据建模、ETL、数据仓库、数据分析', skills: ['SQL','ETL','数据仓库','BI可视化'], tools: 7, icon: '📊', color: '#0d9488', systemPrompt: '你是一位数据工程师，擅长数据建模、ETL流程设计、数据仓库构建和数据分析。精通SQL、Python数据处理、BI工具，能从数据中挖掘洞察并可视化呈现。' },
+    { name: 'AI 工程师', abbr: 'AI', description: '机器学习、深度学习、NLP、模型训练和部署', skills: ['PyTorch','NLP','模型训练','模型部署'], tools: 6, icon: '🤖', color: '#7c3aed', systemPrompt: '你是一位AI/ML工程师，擅长机器学习、深度学习、NLP和计算机视觉。精通PyTorch/TensorFlow，能设计模型架构、训练优化、评估和部署。关注模型效果和工程落地。' },
+    { name: '安全专家', abbr: '安全', description: '网络安全、渗透测试、安全审计、合规', skills: ['渗透测试','安全审计','漏洞分析','合规'], tools: 5, icon: '🛡️', color: '#991b1b', systemPrompt: '你是一位网络安全专家，擅长渗透测试、安全审计、漏洞分析和安全合规。能评估系统安全风险、制定安全策略、审查代码安全性，熟悉OWASP、等保等安全标准。' },
+    { name: '运营专家', abbr: '运营', description: '用户增长、数据运营、活动策划、社区运营', skills: ['用户增长','活动策划','数据分析','社区'], tools: 6, icon: '📈', color: '#16a34a', systemPrompt: '你是一位运营专家，擅长用户增长策略、数据驱动运营、活动策划执行和社区运营管理。能制定运营计划、分析运营数据、优化转化漏斗、提升用户活跃和留存。' },
+    { name: '营销专家', abbr: '营销', description: '品牌策略、内容营销、社媒传播、SEO/SEM', skills: ['品牌策略','内容营销','SEO/SEM','广告'], tools: 7, icon: '📣', color: '#ca8a04', systemPrompt: '你是一位营销专家，擅长品牌策略、内容营销、社交媒体传播、SEO/SEM优化和广告投放。能制定营销方案、撰写营销文案、分析营销ROI、规划传播节奏。' },
+    { name: '商业分析师', abbr: 'BA', description: '商业模式分析、市场研究、财务模型、可行性评估', skills: ['商业分析','市场研究','财务建模','可行性'], tools: 5, icon: '💼', color: '#854d0e', systemPrompt: '你是一位商业分析师，擅长商业模式分析、市场调研、竞争格局分析、财务建模和项目可行性评估。能输出商业计划书、市场分析报告和投资回报分析。' },
+    { name: '技术文档工程师', abbr: '文档', description: 'API 文档、用户手册、技术博客、README', skills: ['API文档','用户手册','技术博客','规范'], tools: 4, icon: '📝', color: '#64748b', systemPrompt: '你是一位技术文档工程师，擅长API文档撰写、用户手册编写、技术博客创作和项目README维护。文档结构清晰、表达准确、示例丰富，遵循文档最佳实践。' },
+    { name: '翻译官', abbr: '译', description: '中英日韩等多语言互译，本地化适配', skills: ['中英互译','日韩翻译','本地化','文案'], tools: 3, icon: '🌐', color: '#f59e0b', systemPrompt: '你是一位专业翻译，精通中文、英文、日文、韩文等多种语言。翻译时注重语义准确、表达自然、文化适配。能处理技术文档、营销文案和产品本地化。' },
+    { name: '法务顾问', abbr: '法务', description: '合同审查、知识产权、隐私合规、风险评估', skills: ['合同审查','知识产权','隐私合规','风控'], tools: 4, icon: '⚖️', color: '#78716c', systemPrompt: '你是一位法务顾问，擅长合同审查、知识产权保护、隐私合规（GDPR/个保法）和法律风险评估。能提供法律意见、审查条款、评估合规风险。' },
+    { name: 'DBA 专家', abbr: 'DBA', description: '数据库优化、SQL 调优、分库分表、数据迁移', skills: ['SQL调优','索引优化','分库分表','备份恢复'], tools: 6, icon: '🗄️', color: '#3730a3', systemPrompt: '你是一位资深DBA，精通MySQL、PostgreSQL、MongoDB、Redis等数据库。擅长SQL性能调优、索引优化、分库分表方案、数据迁移和备份恢复策略。' },
+    { name: '创意总监', abbr: '创意', description: '创意策划、品牌视觉、广告创意、内容方向', skills: ['创意策划','品牌视觉','广告创意','内容策略'], tools: 5, icon: '💡', color: '#be185d', systemPrompt: '你是一位创意总监，擅长创意策划、品牌视觉方向、广告创意构思和内容策略制定。能产出创意brief、视觉风格指南和传播创意方案，兼顾创意性和商业目标。' },
+  ];
+  state.agents = defaults.map((d, i) => ({
+    ...d, id: 'agent-' + (Date.now() + i) + '-' + Math.random().toString(36).slice(2,6),
+    model: '', isBuiltin: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  }));
+  saveAgents();
+}
+
+// ============================================================
+// Agents — View Rendering
+// ============================================================
+function simulateAgentStatuses() {
+  state.agents.forEach(a => {
+    if (!a._status) a._status = 'idle';
+    if (typeof a._progress === 'undefined') a._progress = 0;
+  });
+}
+
+function setAgentWorking(agentId, progress) {
+  const a = state.agents.find(x => x.id === agentId);
+  if (a) { a._status = 'working'; a._progress = progress || 0; }
+}
+
+function setAgentIdle(agentId) {
+  const a = state.agents.find(x => x.id === agentId);
+  if (a) { a._status = 'idle'; a._progress = 0; }
+}
+
+function resetAllAgentStatuses() {
+  state.agents.forEach(a => { a._status = 'idle'; a._progress = 0; });
+}
+
+function renderAgents() {
+  simulateAgentStatuses();
+  // Update dashboard stats
+  const total = state.agents.length;
+  const working = state.agents.filter(a => a._status === 'working').length;
+  const avgProgress = working > 0 ? Math.round(state.agents.filter(a => a._status === 'working').reduce((s,a) => s + (a._progress||0), 0) / working) : 0;
+  const done = state._completedTasks || 0;
+  document.getElementById('agStatTotal').textContent = total;
+  document.getElementById('agStatWorking').textContent = working;
+  document.getElementById('agStatProgress').textContent = working > 0 ? avgProgress + '%' : '—';
+  document.getElementById('agStatDone').textContent = done;
+  const grid = document.getElementById('agentsGrid');
+  grid.innerHTML = state.agents.map(a => {
+    const abbr = a.abbr || a.name.slice(0, 2);
+    const skills = (a.skills || []).slice(0, 3);
+    const toolCount = a.tools || 0;
+    const skillTags = skills.map(s => `<span class="agent-skill-tag">${escapeHtml(s)}</span>`).join('');
+    // Simulated status — in real app would come from backend
+    const status = a._status || 'idle';
+    const progress = a._progress || 0;
+    const statusLabel = status === 'working' ? `执行中 ${progress}%` : status === 'waiting' ? '等待中' : '闲置';
+    const statusDotClass = status === 'working' ? 'working' : status === 'waiting' ? 'waiting' : 'idle';
+    const progressBar = status === 'working' ? `<div class="agent-progress-bar"><div class="agent-progress-fill" style="width:${progress}%"></div></div>` : '';
+    return `
+    <div class="agent-card" onclick="openAgentEditor('${a.id}')">
+      <div class="agent-card-top">
+        <div class="agent-avatar" style="background:${a.color}">${escapeHtml(abbr)}</div>
+        <div class="agent-card-info">
+          <div class="agent-card-name">${escapeHtml(a.name)}</div>
+          <div class="agent-card-desc">${escapeHtml(a.description)}</div>
+        </div>
+      </div>
+      <div class="agent-status">
+        <span class="agent-status-dot ${statusDotClass}"></span>
+        <span class="agent-status-text ${statusDotClass}">${statusLabel}</span>
+        ${progressBar}
+      </div>
+      <div class="agent-skills-row">${skillTags}</div>
+      <div class="agent-card-footer">
+        <span class="agent-card-model">${escapeHtml(a.model || state.settings.model)}</span>
+        <span class="agent-tools-count">${toolCount} 工具</span>
+        ${a.isMain ? '<span class="agent-card-badge" style="color:#1d4ed8;font-weight:700">主 Agent</span>' : a.isBuiltin ? '<span class="agent-card-badge">内置</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// Agents — Editor (CRUD)
+// ============================================================
+let editingAgentId = null;
+function openAgentEditor(id) {
+  editingAgentId = id || null;
+  if (id) {
+    const a = state.agents.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('agentEditorTitle').textContent = '编辑 Agent';
+    document.getElementById('agentName').value = a.name;
+    document.getElementById('agentDesc').value = a.description;
+    document.getElementById('agentIcon').value = a.icon;
+    document.getElementById('agentColor').value = a.color;
+    document.getElementById('agentModel').value = a.model || '';
+    document.getElementById('agentPrompt').value = a.systemPrompt;
+    document.getElementById('agentDeleteBtn').style.display = a.isBuiltin ? 'none' : 'inline-block';
+  } else {
+    document.getElementById('agentEditorTitle').textContent = '新建 Agent';
+    document.getElementById('agentName').value = '';
+    document.getElementById('agentDesc').value = '';
+    document.getElementById('agentIcon').value = '🤖';
+    document.getElementById('agentColor').value = '#4f6ef7';
+    document.getElementById('agentModel').value = '';
+    document.getElementById('agentPrompt').value = '';
+    document.getElementById('agentDeleteBtn').style.display = 'none';
+  }
+  document.getElementById('agentEditorOverlay').classList.add('visible');
+}
+function closeAgentEditor() { document.getElementById('agentEditorOverlay').classList.remove('visible'); editingAgentId = null; }
+function saveAgent() {
+  const name = document.getElementById('agentName').value.trim();
+  if (!name) return;
+  const data = {
+    name, description: document.getElementById('agentDesc').value.trim(),
+    icon: document.getElementById('agentIcon').value || '🤖',
+    color: document.getElementById('agentColor').value,
+    model: document.getElementById('agentModel').value.trim(),
+    systemPrompt: document.getElementById('agentPrompt').value,
+    updatedAt: new Date().toISOString()
+  };
+  if (editingAgentId) {
+    const idx = state.agents.findIndex(a => a.id === editingAgentId);
+    if (idx >= 0) Object.assign(state.agents[idx], data);
+  } else {
+    state.agents.push({ ...data, id: 'agent-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), isBuiltin: false, createdAt: new Date().toISOString() });
+  }
+  saveAgents(); renderAgents(); closeAgentEditor();
+}
+function deleteAgent() {
+  if (!editingAgentId) return;
+  state.agents = state.agents.filter(a => a.id !== editingAgentId);
+  saveAgents(); renderAgents(); closeAgentEditor();
+}
+
+// ============================================================
+// Orchestrator — Build system prompt with all agents
+// ============================================================
+function buildOrchestratorPrompt() {
+  if (state.agents.length === 0) return null;
+  const mainAgent = state.agents.find(a => a.isMain);
+  const teamMembers = state.agents.filter(a => !a.isMain);
+  const mainId = mainAgent ? mainAgent.id : '';
+  const teamDetails = teamMembers.map(a =>
+    `### ${a.name} (ID: ${a.id})\n专长: ${a.description}\n角色设定: ${a.systemPrompt.slice(0, 200)}`
+  ).join('\n\n');
+  return `你是一个多Agent协作系统的项目经理（PM）。你必须按照以下协作流程工作：
+
+## 协作流程
+
+### 第一步：需求分析（PM）
+收到用户需求后，先分析并输出任务拆解方案：
+<!-- agent:${mainId} -->
+**📋 项目经理 - 需求分析与任务分配**
+（分析需求，列出子任务和分配的agent）
+
+### 第二步：多Agent执行
+针对每个子任务，切换到对应专家身份执行。每个agent的输出必须用分隔标记包裹：
+<!-- agent:AGENT_ID -->
+**🔧 [Agent名称] - [子任务名称]**
+（以该agent的专业身份输出具体内容）
+
+### 第三步：PM汇总
+所有agent执行完毕后，切换回PM身份做最终总结：
+<!-- agent:${mainId} -->
+**📋 项目经理 - 成果汇总**
+（整合所有agent的产出，给出完整交付物）
+
+## 关键规则
+1. **复杂任务必须调用多个agent**：不要一个人做所有事，要分配给2-5个最相关的专家
+2. **每个agent段落开头必须有标记**：<!-- agent:AGENT_ID -->
+3. **每个agent只做自己擅长的事**：前端写前端代码，后端写后端逻辑，设计师出设计方案
+4. **简单问题可以只派一个agent**：不必强行拆分
+5. **日常闲聊直接以PM身份回答**
+
+## 团队成员详情
+
+${teamDetails}
+
+## 输出格式示例
+用户问："帮我设计一个登录页面"
+
+你应该这样回答：
+
+<!-- agent:${mainId} -->
+**📋 项目经理 - 需求分析**
+这是一个登录页面需求，需要调用以下团队成员：
+1. 产品经理 → 梳理登录功能需求
+2. UI设计师 → 设计界面方案
+3. 前端工程师 → 实现代码
+
+<!-- agent:产品经理ID -->
+**📋 产品经理 - 功能需求**
+（输出PRD要点）
+
+<!-- agent:UI设计师ID -->
+**🎨 UI设计师 - 界面方案**
+（输出设计方案）
+
+<!-- agent:前端工程师ID -->
+**🖥️ 前端工程师 - 代码实现**
+（输出代码）
+
+<!-- agent:${mainId} -->
+**📋 项目经理 - 交付汇总**
+（整合总结）`;
+}
+
+// ============================================================
+// Init
+// ============================================================
+// ============================================================
+// Skills
+// ============================================================
+const SKILL_CATALOG = [
+  { name: 'tavily-search-pro', desc: 'AI 驱动的全能搜索研究平台', icon: '🔍', cat: '搜索' },
+  { name: 'capability-evolver', desc: 'AI Agent 自主进化引擎', icon: '🧬', cat: 'Agent' },
+  { name: 'agent-overflow', desc: 'AI Agent 的集体记忆与协作网络', icon: '🌐', cat: 'Agent' },
+  { name: 'summarize', desc: '多模态内容摘要，支持网页/PDF/图片/音视频', icon: '📄', cat: '效率' },
+  { name: 'docker-sandbox', desc: 'VM 级隔离安全代码执行环境', icon: '🐳', cat: '开发' },
+  { name: 'agent-browser', desc: '无头浏览器自动化引擎', icon: '🌐', cat: 'Agent' },
+  { name: 'self-improvement', desc: 'AI 持续进化与知识整合系统', icon: '🔄', cat: 'Agent' },
+  { name: 'humanize-ai-text', desc: 'AI 文本特征检测与优化', icon: '✏️', cat: '写作' },
+  { name: 'postgres-job-queue', desc: '零依赖 PostgreSQL 任务队列', icon: '🗄️', cat: '开发' },
+  { name: 'wacli', desc: 'WhatsApp 命令行消息管理', icon: '💬', cat: '通讯' },
+  { name: 'news-aggregator', desc: '8 源新闻聚合与分析', icon: '📰', cat: '信息' },
+  { name: 'multi-search-engine', desc: '17 个搜索引擎模板集成', icon: '🔎', cat: '搜索' },
+  { name: 'blogwatcher', desc: 'RSS 订阅源智能监控', icon: '📡', cat: '信息' },
+  { name: 'skill-creator', desc: 'Claude Skill 开发框架', icon: '🛠️', cat: '开发' },
+  { name: 'skill-vetter', desc: '技能安全审计与评级', icon: '🛡️', cat: '安全' },
+  { name: 'api-gateway', desc: '100+ 服务集成网关', icon: '🔗', cat: '开发' },
+  { name: 'markdown-converter', desc: '文档格式转 Markdown', icon: '📝', cat: '效率' },
+  { name: 'openai-whisper', desc: '本地离线语音识别', icon: '🎙️', cat: 'AI' },
+  { name: 'frontend-design', desc: '前端美学设计指南', icon: '🎨', cat: '设计' },
+  { name: 'moltsheet', desc: '云端电子表格管理', icon: '📊', cat: '办公' },
+  { name: 'notion', desc: 'Notion 知识库自动化', icon: '📓', cat: '办公' },
+  { name: 'obsidian', desc: '本地笔记知识图谱', icon: '🗂️', cat: '办公' },
+  { name: 'stock-watcher', desc: 'A 股实时行情监控', icon: '📈', cat: '金融' },
+  { name: 'stock-analysis', desc: '多维度投资分析', icon: '💹', cat: '金融' },
+  { name: 'github-manager', desc: 'GitHub 仓库与 PR 管理', icon: '🐙', cat: '开发' },
+  { name: 'code-reviewer', desc: '智能代码审查', icon: '🔍', cat: '开发' },
+  { name: 'test-generator', desc: '自动生成单元测试', icon: '🧪', cat: '开发' },
+  { name: 'figma-bridge', desc: 'Figma 设计稿转代码', icon: '🖼️', cat: '设计' },
+  { name: 'image-generator', desc: 'AI 图像生成与编辑', icon: '🖌️', cat: 'AI' },
+  { name: 'video-summarizer', desc: '视频内容智能摘要', icon: '🎬', cat: 'AI' },
+  { name: 'pdf-extractor', desc: 'PDF 表格文本精准提取', icon: '📑', cat: '效率' },
+  { name: 'email-drafter', desc: '商务邮件智能撰写', icon: '✉️', cat: '写作' },
+  { name: 'seo-optimizer', desc: 'SEO 关键词与内容优化', icon: '🎯', cat: '营销' },
+  { name: 'social-poster', desc: '多平台社媒内容发布', icon: '📱', cat: '营销' },
+  { name: 'translation-pro', desc: '专业文档多语言翻译', icon: '🌍', cat: '翻译' },
+  { name: 'data-visualizer', desc: '数据可视化图表生成', icon: '📉', cat: '数据' },
+  { name: 'sql-assistant', desc: 'SQL 查询编写与优化', icon: '🗃️', cat: '数据' },
+  { name: 'cron-scheduler', desc: '定时任务调度管理', icon: '⏰', cat: '效率' },
+  { name: 'webhook-manager', desc: 'Webhook 事件路由', icon: '🔔', cat: '开发' },
+  { name: 'kubernetes-ops', desc: 'K8s 集群运维监控', icon: '☸️', cat: '运维' },
+  { name: 'log-analyzer', desc: '日志智能分析与异常检测', icon: '📋', cat: '运维' },
+  { name: 'security-scanner', desc: '代码依赖安全漏洞扫描', icon: '🔐', cat: '安全' },
+  { name: 'api-tester', desc: 'API 接口自动化测试', icon: '🧩', cat: '开发' },
+  { name: 'mind-mapper', desc: '思维导图自动生成', icon: '🧠', cat: '效率' },
+  { name: 'meeting-notes', desc: '会议纪要智能整理', icon: '📝', cat: '办公' },
+  { name: 'contract-review', desc: '合同条款智能审查', icon: '📃', cat: '法务' },
+  { name: 'competitor-watch', desc: '竞品动态监控分析', icon: '👁️', cat: '营销' },
+  { name: 'prompt-engineer', desc: '提示词优化评估工具', icon: '💡', cat: 'AI' },
+  { name: 'changelog-gen', desc: '变更日志自动生成', icon: '📒', cat: '开发' },
+  { name: 'diagram-maker', desc: 'Mermaid/PlantUML 图表', icon: '📐', cat: '设计' },
+];
+let installedSkills = new Set();
+function loadInstalledSkills() { try { const r = localStorage.getItem('hermes-installed-skills'); if (r) installedSkills = new Set(JSON.parse(r)); } catch(e) {} }
+function saveInstalledSkills() { localStorage.setItem('hermes-installed-skills', JSON.stringify([...installedSkills])); }
+
+function renderSkills(filter) {
+  const q = (filter || '').toLowerCase();
+  const list = q ? SKILL_CATALOG.filter(s => s.name.includes(q) || s.desc.includes(q) || s.cat.includes(q)) : SKILL_CATALOG;
+  document.getElementById('skillsGrid').innerHTML = list.map(s => {
+    const inst = installedSkills.has(s.name);
+    const cls = inst ? 'skill-install-btn installed' : 'skill-install-btn';
+    const ico = inst ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    return `<div class="skill-card"><div class="skill-card-icon">${s.icon}</div><div class="skill-card-body"><div class="skill-card-name">${escapeHtml(s.name)}</div><div class="skill-card-desc">${escapeHtml(s.desc)}</div><span class="skill-card-tag">${escapeHtml(s.cat)}</span></div><button class="${cls}" onclick="event.stopPropagation();installSkill('${s.name}',this)" title="${inst?'已安装':'安装'}">${ico}</button></div>`;
+  }).join('');
+}
+
+function installSkill(name, btn) {
+  if (installedSkills.has(name)) return;
+  // Mark as installing
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="animation:spin 0.8s linear infinite"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="28" stroke-dashoffset="8"/></svg>';
+  btn.style.pointerEvents = 'none';
+  // Simulate install delay (in real implementation, call hermes skills install API)
+  setTimeout(() => {
+    installedSkills.add(name); saveInstalledSkills();
+    btn.className = 'skill-install-btn installed';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    btn.title = '已安装';
+    btn.style.pointerEvents = '';
+    showToast('success', `${name} 安装成功`);
+  }, 800);
+}
+function filterSkills(q) { renderSkills(q); }
+
+function showToast(type, message) {
+  const container = document.getElementById('toastContainer');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || ''}</span>${escapeHtml(message)}`;
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+}
+
+function init() {
+  loadSettings(); loadSessions(); loadAgents(); loadInstalledSkills();
+  renderSessions(); renderMessages(); updateStats(); checkConnection();
+  document.getElementById('modelSelectorLabel').textContent = state.settings.model || 'kimi-k2.5';
+  document.getElementById('userInput').focus();
+}
+init();
+</script>
+</body>
+</html>
